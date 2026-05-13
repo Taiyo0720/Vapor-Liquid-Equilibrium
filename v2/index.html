@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>気液平衡シミュレーション</title>
+<title>気液平衡シミュレータ</title>
 
 <style>
 
@@ -209,11 +209,144 @@ input[type="range"]{
     inset 0 0 20px rgba(255,255,255,0.03);
 }
 
+.app{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:28px;
+}
+
+.mainArea{
+  display:flex;
+  gap:40px;
+  align-items:flex-start;
+}
+
+.title{
+  margin:0;
+
+  font-size:38px;
+  font-weight:800;
+
+  letter-spacing:0.08em;
+
+  color:#e2e8f0;
+
+  text-shadow:
+    0 4px 18px rgba(120,180,255,0.35);
+}
+
+/* ========================================
+   スマホ対応
+======================================== */
+
+@media (max-width: 900px){
+
+  body{
+
+    height:auto;
+    min-height:100vh;
+
+    padding:
+      24px
+      12px;
+
+    align-items:flex-start;
+  }
+
+  .app{
+    width:100%;
+  }
+
+  .mainArea{
+
+    width:100%;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    gap:24px;
+  }
+
+  .container{
+
+    width:min(92vw, 320px);
+
+    height:70vh;
+    max-height:520px;
+  }
+
+  #moleculeCanvas{
+    width:100%;
+    height:100%;
+  }
+
+  .controls{
+
+    width:min(92vw, 360px);
+
+    margin-left:0;
+
+    display:flex;
+    flex-direction:column;
+
+    gap:18px;
+  }
+
+  .title{
+
+    font-size:28px;
+
+    text-align:center;
+
+    line-height:1.2;
+  }
+
+  .subtitle{
+
+    text-align:center;
+
+    font-size:12px;
+  }
+
+  label{
+
+    font-size:14px;
+  }
+
+  input[type="range"]{
+    width:100%;
+  }
+
+  .info{
+
+    font-size:14px;
+
+    line-height:1.8;
+  }
+
+  #barCanvas{
+
+    width:100%;
+    height:auto;
+
+    max-width:360px;
+
+    align-self:center;
+  }
+}
+
 </style>
 </head>
 
 <body>
 
+<div class="app">
+
+<h1 class="title">気-液シミュレータ（定積・定温条件）</h1>
+
+<div class="mainArea">
 <div class="container">
 
   <canvas id="moleculeCanvas"></canvas>
@@ -265,6 +398,8 @@ input[type="range"]{
     height="420"
   ></canvas>
 
+</div>
+</div>
 </div>
 
 
@@ -765,9 +900,56 @@ function updateScene(){
   const concentration =
     gasMol / gasVolume;
 
+  const evaporation =
+    liquidMol > 0
+    ? evaporationRate * dt
+    : 0;
+
+  const condensation =
+    condensationCoeff
+    * concentration
+    * dt;
+
+  let stateText = "";
+  let stateColor;
+
+  if(liquidMol < 0.4){
+
+    stateText = "気体のみ";
+    stateColor = "#e2e8f0";
+
+  }else{
+
+    const diff =
+      evaporation - condensation;
+
+    if(diff > 0.0001){
+
+      stateText = "蒸発が優勢";
+      stateColor = "#f59e0b"; // 蒸発
+
+    }else if(diff < -0.0001){
+
+      stateText = "凝縮が優勢";
+      stateColor = "#22c55e"; // 凝縮
+
+    }else{
+      if (dt > 0){
+        stateText = "気液平衡";
+      } else {
+        stateText = "停止中";
+      }
+      stateColor = "#38bdf8"; // 平衡または停止
+    }
+  }
+
   info.innerHTML = `
-    気体体積: ${gasVolume.toFixed(1)}<br>
-    気体圧力: ${concentration.toFixed(4)}<br>
+    <span style="color:${stateColor};
+                 font-weight:bold;">
+      ${stateText}
+    </span><br>
+    気体体積: ${(gasVolume / 200).toFixed(3)}<br>
+    気体圧力: ${(concentration / 0.1428).toFixed(3)}<br>
   `;
 }
 
@@ -890,7 +1072,6 @@ function stepSimulation(){
   }
 
   updateScene();
-  syncParticles();
   updateParticles();
   clampParticles();
   drawParticles();
@@ -923,6 +1104,7 @@ dtSlider.addEventListener("input", ()=>{
 // 初期描画
 // ========================================
 
+syncParticles();
 updateScene();
 
 
