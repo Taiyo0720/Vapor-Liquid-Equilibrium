@@ -238,7 +238,7 @@ function syncParticles(){
     gasParticles.push(
       createParticle(
         Math.random() * 240,
-        pistonY + Math.random() * (containerHeight - liquidMol * liquidScale),
+        pistonY + Math.random() * (containerHeight - liquidMol * liquidScale - pistonY),
 
         (Math.random()-0.5)*4,
         (Math.random()-0.5)*4
@@ -263,7 +263,7 @@ function syncParticles(){
     liquidParticles.push(
       createParticle(
         Math.random() * 240,
-        420 - Math.random() * liquidHeight,
+        containerHeight - Math.random() * liquidHeight,
 
         (Math.random()-0.5)*0.8,
         (Math.random()-0.5)*0.8
@@ -323,7 +323,7 @@ function updateParticles(){
       p.vx *= -1;
     }
 
-    if(p.y < liquidTop || p.y > 420){
+    if(p.y < liquidTop || p.y > containerHeight){
       p.vy *= -1;
     }
   }
@@ -335,51 +335,12 @@ function drawParticles(){
   const gasBottom = containerHeight - liquidMol * liquidScale;
   const liquidTop = gasBottom;
 
-  ctx.clearRect(0,0,240,420);
+  ctx.clearRect(0,0,240,containerHeight);
 
   // 気体
   ctx.fillStyle = "cyan";
 
   for(const p of gasParticles){
-
-    p.x += p.vx;
-    p.y += p.vy;
-
-    // -------------------
-    // 左右壁
-    // -------------------
-
-    if(p.x < 0){
-      p.x = 0;
-      p.vx *= -1;
-    }
-
-    if(p.x > 240){
-      p.x = 240;
-      p.vx *= -1;
-    }
-
-
-    // -------------------
-    // 上壁
-    // -------------------
-
-    if(p.y < gasTop){
-
-      p.y = gasTop;
-      p.vy *= -1;
-    }
-
-
-    // -------------------
-    // 下壁（液面）
-    // -------------------
-
-    if(p.y > gasBottom){
-
-      p.y = gasBottom;
-      p.vy *= -1;
-    }
 
     // -------------------
     // 描画
@@ -403,31 +364,6 @@ function drawParticles(){
   ctx.fillStyle = "cyan";
 
   for(const p of liquidParticles){
-
-    p.x += p.vx;
-    p.y += p.vy;
-
-    if(p.x < 0){
-      p.x = 0;
-      p.vx *= -1;
-    }
-
-    if(p.x > 240){
-      p.x = 240;
-      p.vx *= -1;
-    }
-
-    if(p.y < liquidTop){
-
-      p.y = liquidTop;
-      p.vy *= -1;
-    }
-
-    if(p.y > 420){
-
-      p.y = 420;
-      p.vy *= -1;
-    }
 
     // -------------------
     // 描画
@@ -636,10 +572,59 @@ function stepSimulation(){
   gasMol =
     Math.max(gasMol, 0);
 
+  const targetGas = Math.floor(gasMol * 2);
+  const targetLiquid = Math.floor(liquidMol * 2);
+
+  while (gasParticles.length < targetGas){
+
+    if(liquidParticles.length === 0) break;
+
+    // 液体から1粒子取り出す
+    const p = liquidParticles.pop();
+
+    // 液面位置
+    const liquidHeight =
+      liquidMol * liquidScale;
+
+    const liquidTop =
+      containerHeight - liquidHeight;
+
+    // 液面から発生
+    p.y = liquidTop;
+
+    // 速度大きめ
+    p.vx = (Math.random()-0.5)*4;
+    p.vy = -Math.random()*3;
+
+    gasParticles.push(p);
+  }
+  while (liquidParticles.length < targetLiquid){
+
+    if(gasParticles.length === 0) break;
+
+    // 気体粒子取り出し
+    const p = gasParticles.pop();
+
+    const liquidHeight =
+      liquidMol * liquidScale;
+
+    const liquidTop =
+      containerHeight - liquidHeight;
+
+    // 液面へ
+    p.y = liquidTop;
+
+    // 液体らしく低速化
+    p.vx = (Math.random()-0.5)*0.8;
+    p.vy = (Math.random()-0.5)*0.8;
+
+    liquidParticles.push(p);
+  }
 
   updateScene();
   syncParticles();
   updateParticles();
+  clampParticles();
   drawParticles();
 }
 
