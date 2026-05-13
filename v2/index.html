@@ -812,7 +812,10 @@ function clampParticles(){
   // 液体粒子
   for(const p of liquidParticles){
 
-    p.y = Math.max(liquidTop,
+    if(p.y <= liquidTop + 5){
+      p.vy = Math.min(2, Math.abs(p.vy));
+    }
+    p.y = Math.max(liquidTop + 5,
           Math.min(containerHeight, p.y));
   }
 }
