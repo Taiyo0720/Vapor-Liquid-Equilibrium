@@ -1,0 +1,26 @@
+// 気体
+ctx.fillStyle = "white";
+
+for(const p of gasParticles){
+
+  p.x += p.vx;
+  p.y += p.vy;
+
+  // 壁反射
+  ...
+
+  // -------------------
+  // 描画
+  // -------------------
+
+  ctx.beginPath();
+
+  ctx.arc(
+    p.x,
+    p.y,
+    3,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.fill();
