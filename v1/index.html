@@ -1,26 +1,684 @@
-// 気体
-ctx.fillStyle = "white";
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>気液平衡シミュレーション</title>
 
-for(const p of gasParticles){
+<style>
 
-  p.x += p.vx;
-  p.y += p.vy;
+body{
+  margin:0;
+  height:100vh;
 
-  // 壁反射
-  ...
+  display:flex;
+  justify-content:center;
+  align-items:center;
+
+  background:#eef2f7;
+  font-family:sans-serif;
+}
+
+.container{
+  position:relative;
+
+  width:240px;
+  height:420px;
+
+  border-left:6px solid #444;
+  border-right:6px solid #444;
+  border-bottom:6px solid #444;
+
+  overflow:hidden;
+  background:white;
+}
+
+/* 気体領域 */
+.gas{
+  position:absolute;
+  left:0;
+  width:100%;
+  background: rgba(180,220,255,0.15);
+}
+
+/* 液体 */
+.liquid{
+  position:absolute;
+  left:0;
+  bottom:0;
+  width:100%;
+  background:rgba(70,140,255,0.75);
+}
+
+/* ピストン */
+.piston{
+  position:absolute;
+
+  left:-12px;
+  width:calc(100% + 24px);
+  height:24px;
+
+  background:#777;
+  border-radius:4px;
+
+  box-shadow:0 2px 6px rgba(0,0,0,0.3);
+}
+
+/* シャフト */
+.shaft{
+  position:absolute;
+
+  left:50%;
+  transform:translateX(-50%);
+
+  width:18px;
+  background:#999;
+}
+
+.controls{
+  margin-left:40px;
+  width:260px;
+}
+
+label{
+  display:block;
+  margin-top:14px;
+}
+
+.info{
+  margin-top:20px;
+  line-height:1.6;
+}
+
+#moleculeCanvas{
+  position:absolute;
+  left:0;
+  top:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <canvas id="moleculeCanvas"></canvas>
+
+  <div class="gas" id="gas"></div>
+
+  <div class="liquid" id="liquid"></div>
+
+  <div class="shaft" id="shaft"></div>
+
+  <div class="piston" id="piston"></div>
+
+</div>
+
+
+<div class="controls">
+
+  <label>
+    ピストン位置（液面が最大値）
+    <input
+      type="range"
+      id="pistonSlider"
+      min="40"
+      max="360"
+      value="140"
+    >
+  </label>
+
+  <label>
+    更新速度
+    <input
+      type="range"
+      id="dtSlider"
+      min="0"
+      max="10"
+      value="1"
+    >
+
+  <div class="info" id="info"></div>
+
+</div>
+
+
+<script>
+
+// ========================================
+// 状態変数
+// ========================================
+
+// ピストン位置（上から）
+let pistonY = 140;
+
+// 液体 mol
+let liquidMol = 40;
+
+// 気体 mol
+let gasMol = 10;
+
+
+// ========================================
+// 定数
+// ========================================
+
+const containerHeight = 420;
+
+// 液体1 molあたりの高さpx
+const liquidScale = 2;
+
+// 蒸発速度
+const evaporationRate = 0.03;
+
+// 凝縮係数
+const condensationCoeff = 0.21;
+
+// 時間刻み
+let dt = 1;
+
+
+// ========================================
+// 要素取得
+// ========================================
+
+const piston = document.getElementById("piston");
+const shaft = document.getElementById("shaft");
+const gas = document.getElementById("gas");
+const liquid = document.getElementById("liquid");
+
+const pistonSlider =
+  document.getElementById("pistonSlider");
+const dtSlider =
+  document.getElementById("dtSlider");
+
+const info = document.getElementById("info");
+
+const canvas =
+  document.getElementById("moleculeCanvas");
+
+const ctx =
+  canvas.getContext("2d");
+
+canvas.width = 240;
+canvas.height = 420;
+let gasParticles = [];
+let liquidParticles = [];
+
+
+function createParticle(x, y, vx, vy){
+  return {
+    x,
+    y,
+    vx,
+    vy
+  };
+}
+
+function syncParticles(){
+
+  // mol → 粒子数
+  const targetGas =
+    Math.floor(gasMol * 2);
+
+  const targetLiquid =
+    Math.floor(liquidMol * 2);
+
 
   // -------------------
-  // 描画
+  // 気体粒子
   // -------------------
 
-  ctx.beginPath();
+  while(gasParticles.length < targetGas){
 
-  ctx.arc(
-    p.x,
-    p.y,
-    3,
-    0,
-    Math.PI * 2
+    gasParticles.push(
+      createParticle(
+        Math.random() * 240,
+        pistonY + Math.random() * (containerHeight - liquidMol * liquidScale),
+
+        (Math.random()-0.5)*4,
+        (Math.random()-0.5)*4
+      )
+    );
+  }
+
+  while(gasParticles.length > targetGas){
+    gasParticles.pop();
+  }
+
+
+  // -------------------
+  // 液体粒子
+  // -------------------
+
+  const liquidHeight =
+    liquidMol * liquidScale;
+
+  while(liquidParticles.length < targetLiquid){
+
+    liquidParticles.push(
+      createParticle(
+        Math.random() * 240,
+        420 - Math.random() * liquidHeight,
+
+        (Math.random()-0.5)*0.8,
+        (Math.random()-0.5)*0.8
+      )
+    );
+  }
+
+  while(liquidParticles.length > targetLiquid){
+    liquidParticles.pop();
+  }
+}
+
+
+function updateParticles(){
+
+  const liquidHeight =
+    liquidMol * liquidScale;
+
+  const gasTop = pistonY;
+  const gasBottom =
+    containerHeight - liquidHeight;
+
+  // ===================
+  // 気体
+  // ===================
+
+  for(const p of gasParticles){
+
+    p.x += p.vx;
+    p.y += p.vy;
+
+    // 壁反射
+
+    if(p.x < 0 || p.x > 240){
+      p.vx *= -1;
+    }
+
+    if(p.y < gasTop || p.y > gasBottom){
+      p.vy *= -1;
+    }
+  }
+
+
+  // ===================
+  // 液体
+  // ===================
+
+  const liquidTop =
+    containerHeight - liquidHeight;
+
+  for(const p of liquidParticles){
+
+    p.x += p.vx;
+    p.y += p.vy;
+
+    if(p.x < 0 || p.x > 240){
+      p.vx *= -1;
+    }
+
+    if(p.y < liquidTop || p.y > 420){
+      p.vy *= -1;
+    }
+  }
+}
+
+function drawParticles(){
+
+  const gasTop = pistonY;
+  const gasBottom = containerHeight - liquidMol * liquidScale;
+  const liquidTop = gasBottom;
+
+  ctx.clearRect(0,0,240,420);
+
+  // 気体
+  ctx.fillStyle = "cyan";
+
+  for(const p of gasParticles){
+
+    p.x += p.vx;
+    p.y += p.vy;
+
+    // -------------------
+    // 左右壁
+    // -------------------
+
+    if(p.x < 0){
+      p.x = 0;
+      p.vx *= -1;
+    }
+
+    if(p.x > 240){
+      p.x = 240;
+      p.vx *= -1;
+    }
+
+
+    // -------------------
+    // 上壁
+    // -------------------
+
+    if(p.y < gasTop){
+
+      p.y = gasTop;
+      p.vy *= -1;
+    }
+
+
+    // -------------------
+    // 下壁（液面）
+    // -------------------
+
+    if(p.y > gasBottom){
+
+      p.y = gasBottom;
+      p.vy *= -1;
+    }
+
+    // -------------------
+    // 描画
+    // -------------------
+
+    ctx.beginPath();
+
+    ctx.arc(
+      p.x,
+      p.y,
+      3,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fill();
+  }
+
+
+  // 液体
+  ctx.fillStyle = "cyan";
+
+  for(const p of liquidParticles){
+
+    p.x += p.vx;
+    p.y += p.vy;
+
+    if(p.x < 0){
+      p.x = 0;
+      p.vx *= -1;
+    }
+
+    if(p.x > 240){
+      p.x = 240;
+      p.vx *= -1;
+    }
+
+    if(p.y < liquidTop){
+
+      p.y = liquidTop;
+      p.vy *= -1;
+    }
+
+    if(p.y > 420){
+
+      p.y = 420;
+      p.vy *= -1;
+    }
+
+    // -------------------
+    // 描画
+    // -------------------
+
+    ctx.beginPath();
+
+    ctx.arc(
+      p.x,
+      p.y,
+      3,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fill();
+  }
+}
+
+function clampParticles(){
+
+  const liquidHeight =
+    liquidMol * liquidScale;
+
+  const gasTop = pistonY;
+  const gasBottom =
+    containerHeight - liquidHeight;
+
+  const liquidTop = gasBottom;
+
+  // 気体粒子
+  for(const p of gasParticles){
+
+    p.y = Math.max(gasTop,
+          Math.min(gasBottom, p.y));
+  }
+
+  // 液体粒子
+  for(const p of liquidParticles){
+
+    p.y = Math.max(liquidTop,
+          Math.min(containerHeight, p.y));
+  }
+}
+    
+// ========================================
+// 描画更新
+// ========================================
+
+function updateScene(){
+
+  // --------------------
+  // 液体高さ
+  // --------------------
+
+  const liquidHeight =
+    liquidMol * liquidScale;
+  // --------------------
+  // ピストン侵入防止
+  // --------------------
+  
+  // 最低でも1pxは気相を残す
+  const maxPistonY =
+    containerHeight
+    - liquidHeight
+    - 1;
+  
+  // ピストン位置制限
+  pistonY = Math.min(
+    pistonY,
+    maxPistonY
   );
+  
+  // スライダー側にも反映
+  pistonSlider.max = maxPistonY;
+  pistonSlider.value = pistonY;
 
-  ctx.fill();
+  // --------------------
+  // 気体体積
+  // --------------------
+  // ピストン下端までの高さ
+  // から液体部分を引く
+
+  const gasHeight =
+    containerHeight - pistonY - liquidHeight;
+
+  const gasVolume =
+    Math.max(gasHeight, 1);
+
+
+  // --------------------
+  // ピストン
+  // --------------------
+
+  piston.style.top =
+    pistonY - 24 +  "px";
+
+  shaft.style.top = "0px";
+
+  shaft.style.height =
+    pistonY + "px";
+
+
+  // --------------------
+  // 気体領域
+  // --------------------
+
+  gas.style.top = pistonY + "px";
+
+  gas.style.height =
+    gasHeight + "px";
+
+
+  // --------------------
+  // 液体
+  // --------------------
+
+  liquid.style.height =
+    liquidHeight + "px";
+
+
+  // --------------------
+  // 情報表示
+  // --------------------
+
+  const concentration =
+    gasMol / gasVolume;
+
+  info.innerHTML = `
+    液体: ${liquidMol.toFixed(2)} mol<br>
+    気体: ${gasMol.toFixed(2)} mol<br>
+    気体体積: ${gasVolume.toFixed(1)}<br>
+    気体濃度: ${concentration.toFixed(4)}<br>
+    蒸発: ${evaporationRate * dt}<br>
+    凝縮: ${(condensationCoeff * concentration * dt).toFixed(4)}<br>
+    速度: ${dt}
+  `;
+}
+
+
+// ========================================
+// 時間発展
+// ========================================
+
+function stepSimulation(){
+
+  // --------------------
+  // 液体高さ
+  // --------------------
+
+  const liquidHeight =
+    liquidMol * liquidScale;
+
+  // 気体高さ
+  let gasHeight =
+    containerHeight - pistonY - liquidHeight;
+
+  gasHeight = Math.max(gasHeight, 0.1);
+
+  const gasVolume = gasHeight;
+
+
+  // --------------------
+  // 蒸発
+  // 液体がある限り一定
+  // --------------------
+
+  let evaporation = 0;
+
+  if(liquidMol > 0){
+    evaporation =
+      evaporationRate * dt;
+  }
+
+
+  // --------------------
+  // 凝縮
+  // 気体濃度に比例
+  // --------------------
+
+  const concentration =
+    gasMol / gasVolume;
+
+  const condensation =
+    condensationCoeff
+    * concentration
+    * dt;
+
+
+  // --------------------
+  // 更新
+  // --------------------
+
+  const delta =
+    evaporation - condensation;
+
+  liquidMol -= delta;
+  gasMol += delta;
+
+
+  // 負防止
+
+  liquidMol =
+    Math.max(liquidMol, 0);
+
+  gasMol =
+    Math.max(gasMol, 0);
+
+
+  updateScene();
+  syncParticles();
+  updateParticles();
+  drawParticles();
+}
+
+
+// ========================================
+// スライダー
+// ========================================
+
+pistonSlider.addEventListener("input", ()=>{
+
+  pistonY =
+    Number(pistonSlider.value);
+
+  updateScene();
+  clampParticles();
+});
+
+dtSlider.addEventListener("input", ()=>{
+  dt =
+    Number(dtSlider.value);
+
+  updateScene();
+});
+
+
+// ========================================
+// 初期描画
+// ========================================
+
+updateScene();
+
+
+// ========================================
+// ループ
+// ========================================
+
+setInterval(stepSimulation, 30);
+
+</script>
+
+</body>
+</html>
