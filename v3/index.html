@@ -323,7 +323,7 @@ input[type="range"]{
 </div>
 
 <div>
-  <p>5/14 16:39更新</p>
+  <p>5/14 17:04更新</p>
   <p>※蒸発量は絶対温度に、凝縮量は気体の濃度に比例するという仮定をおこなっています。</p>
 </div>
 </div>
@@ -494,13 +494,13 @@ function drawBars(){
 
   barCtx.fillText(
     "液",
-    50,
+    60,
     180
   );
 
   barCtx.fillText(
     "気",
-    130,
+    140,
     180
   );
 
@@ -525,10 +525,10 @@ function drawBars(){
   // ---------------------
 
   const evapStrength =
-    Math.max(18, evaporation * 900);
+    Math.max(3, evaporation * 900);
 
   const condStrength =
-    Math.max(18, condensation * 900);
+    Math.max(3, condensation * 900);
 
   // 上限
   const evapSize =
