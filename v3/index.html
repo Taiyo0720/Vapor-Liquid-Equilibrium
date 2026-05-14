@@ -414,7 +414,7 @@ input[type="range"]{
 </div>
 </header>
 
-<footer>5/14 14:14更新</footer>
+<footer>5/14 15:19更新</footer>
 
 
 <script>
@@ -593,53 +593,63 @@ function drawBars(){
 
 
   // =====================
-  // 蒸発 vs 凝縮
+  // 蒸発 ⇄ 凝縮
   // =====================
 
-  barCtx.fillText(
-    "蒸発 vs 凝縮",
-    20,
-    210
-  );
-
-  // 蒸発
-
-  barCtx.fillStyle =
-    "orange";
-
-  barCtx.fillRect(
-    40,
-    360 - evaporation * flowScale,
-    40,
-    evaporation * flowScale
-  );
-
-  // 凝縮
-
-  barCtx.fillStyle =
-    "green";
-
-  barCtx.fillRect(
-    120,
-    360 - condensation * flowScale,
-    40,
-    condensation * flowScale
-  );
-
-  // ラベル
-
   barCtx.fillStyle = "white";
+  barCtx.font = "16px sans-serif";
 
   barCtx.fillText(
-    "蒸",
-    50,
-    380
+    "蒸発 ⇄ 凝縮",
+    20,
+    240
   );
 
+  // ---------------------
+  // 強さ
+  // ---------------------
+
+  const evapStrength =
+    Math.max(18, evaporation * 900);
+
+  const condStrength =
+    Math.max(18, condensation * 900);
+
+  // 上限
+  const evapSize =
+    Math.min(evapStrength, 56);
+
+  const condSize =
+    Math.min(condStrength, 56);
+
+  // ---------------------
+  // 蒸発
+  // ---------------------
+
+  barCtx.fillStyle = "orange";
+
+  barCtx.font =
+    `bold ${evapSize}px sans-serif`;
+
   barCtx.fillText(
-    "凝",
-    130,
-    380
+    "蒸発 →",
+    25,
+    330
+  );
+
+  // ---------------------
+  // 凝縮
+  // ---------------------
+
+  barCtx.fillStyle = "#22c55e";
+
+  barCtx.font =
+    `bold ${condSize}px sans-serif`;
+
+  barCtx.fillText(
+    "← 凝縮",
+    120,
+    330
   );
 
 }
@@ -750,8 +760,8 @@ function updateParticles(){
 
   for(const p of liquidParticles){
 
-    p.x += p.vx * dt / 5 * T / 298;
-    p.y += p.vy * dt / 5 * T / 298;
+    p.x += p.vx * dt / 5 * Math.sqrt(T / 298);
+    p.y += p.vy * dt / 5 * Math.sqrt(T / 298);
 
     if(p.x < 0 || p.x > 240){
       p.vx *= -1;
