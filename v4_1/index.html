@@ -1167,6 +1167,9 @@ function stepSimulation(){
   if(liquidMol > liquidMol0 + gasMol0){
     gasMol = 0;
     liquidMol = liquidMol0 + gasMol0;
+  }else if(gasMol > liquidMol0 + gasMol0){
+    gasMol = liquidMol0 + gasMol0;
+    liquidMol = 0;
   }
 
   const targetGas = Math.floor(gasMol * particleRate);
