@@ -414,7 +414,7 @@ input[type="range"]{
 </div>
 </header>
 
-<footer>5/14 15:19更新</footer>
+<footer>5/14 15:24更新</footer>
 
 
 <script>
@@ -540,6 +540,8 @@ function drawBars(){
 
   barCtx.fillStyle = "white";
   barCtx.font = "16px sans-serif";
+  barCtx.textAlign = "center";
+  barCtx.textBaseline = "middle";
 
   barCtx.fillText(
     "液体 vs 気体",
@@ -631,6 +633,8 @@ function drawBars(){
   barCtx.font =
     `bold ${evapSize}px sans-serif`;
 
+  barCtx.textAlign = "right";
+
   barCtx.fillText(
     "蒸発 →",
     25,
@@ -645,6 +649,8 @@ function drawBars(){
 
   barCtx.font =
     `bold ${condSize}px sans-serif`;
+
+  barCtx.textAlign = "left";
 
   barCtx.fillText(
     "← 凝縮",
