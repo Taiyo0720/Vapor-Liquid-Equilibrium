@@ -334,7 +334,6 @@ input[type="range"]{
 <script>
 
 //運動エネルギーは温度の平方根に比例する
-//棒グラフを矢印で拮抗する感じに
 
 // ========================================
 // 状態変数
@@ -489,7 +488,7 @@ function drawBars(){
     "rgba(100,220,255,0.8)";
 
   barCtx.fillRect(
-    120,
+    130,
     160 - gasValue * molScale,
     40,
     gasValue * molScale
@@ -507,7 +506,7 @@ function drawBars(){
 
   barCtx.fillText(
     "気",
-    140,
+    150,
     180
   );
 
@@ -989,9 +988,9 @@ function stepSimulation(){
     Math.max(gasMol, 0);
   
   //異常更新時の数値適正化
-  if(gasMol < 0.01){
-    gasMol = 0.01;
-    liquidMol = liquidMol0 + gasMol0 - 0.01;
+  if(liquidMol > liquidMol0 + gasMol0){
+    gasMol = 0;
+    liquidMol = liquidMol0 + gasMol0;
   }
 
   const targetGas = Math.floor(gasMol * 2);
