@@ -323,7 +323,7 @@ input[type="range"]{
 </div>
 
 <div>
-  <p>5/14 17:21更新</p>
+  <p>5/14 17:30更新</p>
   <p>シミュレーションにあたっての仮定（実際の挙動には即しません）<br>
     ・蒸発量は絶対温度に、凝縮量は気体の濃度に比例する。<br>
     ・凝固はしないものとする。
@@ -375,7 +375,7 @@ let T = 298;
 let dt = 5;
 
 //気体分子速度係数
-const gasVelocityCoeff = 20;
+const gasVelocityCoeff = 30;
 
 
 // ========================================
@@ -474,7 +474,7 @@ function drawBars(){
     "rgba(70,140,255,0.8)";
 
   barCtx.fillRect(
-    40,
+    70,
     160 - liquidValue * molScale,
     40,
     liquidValue * molScale
@@ -500,7 +500,7 @@ function drawBars(){
 
   barCtx.fillText(
     "液",
-    60,
+    90,
     180
   );
 
@@ -556,7 +556,7 @@ function drawBars(){
 
   barCtx.fillText(
     "蒸発 →",
-    120,
+    130,
     centerY
   );
 
@@ -573,7 +573,7 @@ function drawBars(){
 
   barCtx.fillText(
     "← 凝縮",
-    120,
+    130,
     centerY
   );
 
