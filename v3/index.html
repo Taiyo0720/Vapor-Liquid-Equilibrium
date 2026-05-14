@@ -723,8 +723,8 @@ function updateParticles(){
 
   for(const p of gasParticles){
 
-    p.x += p.vx;
-    p.y += p.vy;
+    p.x += p.vx * dt / 5 * T / 298;
+    p.y += p.vy * dt / 5 * T / 298;
 
     // 壁反射
 
@@ -747,8 +747,8 @@ function updateParticles(){
 
   for(const p of liquidParticles){
 
-    p.x += p.vx;
-    p.y += p.vy;
+    p.x += p.vx * dt / 5 * T / 298;
+    p.y += p.vy * dt / 5 * T / 298;
 
     if(p.x < 0 || p.x > 240){
       p.vx *= -1;
@@ -1069,8 +1069,8 @@ function stepSimulation(){
     p.y = liquidTop;
 
     // 速度大きめ
-    p.vx = (Math.random()-0.5)*gasVelocityCoeff,//*dt/5;
-    p.vy = -Math.random()*gasVelocityCoeff,//*dt/5;
+    p.vx = (Math.random()-0.5)*gasVelocityCoeff;
+    p.vy = -Math.random()*gasVelocityCoeff;
 
     gasParticles.push(p);
   }
@@ -1123,7 +1123,6 @@ dtSlider.addEventListener("input", ()=>{
     Number(dtSlider.value);
 
   updateScene();
-  //updateParticles();
 });
 tempSlider.addEventListener("input", ()=>{
   T =
