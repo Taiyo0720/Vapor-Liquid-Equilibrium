@@ -414,7 +414,7 @@ input[type="range"]{
 </div>
 </header>
 
-<footer>5/14 15:34更新</footer>
+<footer>5/14 15:39更新</footer>
 
 
 <script>
@@ -692,8 +692,8 @@ function syncParticles(){
         Math.random() * 240,
         pistonY + Math.random() * (containerHeight - liquidMol * liquidScale - pistonY),
 
-        (Math.random()-0.5)*gasVelocityCoeff,//*dt/5,
-        (Math.random()-0.5)*gasVelocityCoeff//*dt/5
+        (Math.random()-0.5)*gasVelocityCoeff,
+        (Math.random()-0.5)*gasVelocityCoeff
       )
     );
   }
@@ -768,8 +768,8 @@ function updateParticles(){
 
   for(const p of liquidParticles){
 
-    p.x += p.vx * dt / 5 * Math.sqrt(T / 298);
-    p.y += p.vy * dt / 5 * Math.sqrt(T / 298);
+    p.x += (p.vx + (Math.random() - 0.5) * 1.5) * dt / 5 * Math.sqrt(T / 298);
+    p.y += (p.vy + (Math.random() - 0.5) * 1.5) * dt / 5 * Math.sqrt(T / 298);
 
     if(p.x < 0 || p.x > 240){
       p.vx *= -1;
