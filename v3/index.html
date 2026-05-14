@@ -191,7 +191,7 @@ label{
 
 input[type="range"]{
   width:100%;
-  margin-top:10px;
+  margin-top:5px;
 
   accent-color:#60a5fa;
 }
@@ -414,7 +414,7 @@ input[type="range"]{
 </div>
 </header>
 
-<footer>5/14 15:30更新</footer>
+<footer>5/14 15:34更新</footer>
 
 
 <script>
@@ -997,6 +997,7 @@ function updateScene(){
     </span><br>
     気体体積: ${(gasVolume / 252).toFixed(3)}<br>
     気体濃度: ${(concentration / 0.1428).toFixed(3)}<br>
+    気体圧力: ${(concentration / 0.1428 * T / 298).toFixed(3)}
   `;
 }
 
