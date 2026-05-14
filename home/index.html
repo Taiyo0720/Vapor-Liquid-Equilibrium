@@ -1,0 +1,160 @@
+export default function VLEPortal() {
+  const versions = [
+    {
+      ver: "ver1",
+      title: "Prototype",
+      desc: "最初期の気液平衡シミュレーション。蒸発・凝縮の基本挙動を確認。",
+      color: "from-sky-400 to-cyan-300",
+      href: "../v1/index.html",
+    },
+    {
+      ver: "ver2",
+      title: "Particle Model",
+      desc: "デザインを改良し、数値を調整、数量関係を棒グラフで可視化した。",
+      color: "from-cyan-400 to-teal-300",
+      href: "../v2/index.html",
+    },
+    {
+      ver: "ver3",
+      title: "Equilibrium",
+      desc: "温度依存性を追加。",
+      color: "from-indigo-400 to-sky-300",
+      href: "../v3/index.html",
+    },
+    {
+      ver: "ver4",
+      title: "Current",
+      desc: "最新バージョン。実際の数値に近づくように改良。",
+      color: "from-violet-400 to-blue-300",
+      href: "../v4/index.html",
+    },
+  ];
+
+  return (
+    <div className="min-h-screen overflow-hidden bg-[#07111f] text-white relative">
+      {/* background glow */}
+      <div className="absolute inset-0">
+        <div className="absolute top-[-120px] left-[-80px] h-[380px] w-[380px] rounded-full bg-cyan-500/20 blur-3xl" />
+        <div className="absolute bottom-[-140px] right-[-100px] h-[420px] w-[420px] rounded-full bg-blue-500/20 blur-3xl" />
+      </div>
+
+      {/* grid overlay */}
+      <div
+        className="absolute inset-0 opacity-[0.07]"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
+        }}
+      />
+
+      <main className="relative z-10 max-w-6xl mx-auto px-6 py-16">
+        {/* hero */}
+        <section className="mb-16">
+          <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-4 py-1 text-sm text-cyan-200 backdrop-blur">
+            Vapor-Liquid Equilibrium Simulator
+          </div>
+
+          <h1 className="mt-6 text-5xl md:text-7xl font-black tracking-tight leading-none">
+            気液平衡
+            <br />
+            シミュレーション
+          </h1>
+
+          <p className="mt-6 max-w-2xl text-lg text-slate-300 leading-relaxed">
+            蒸発・凝縮・温度依存性・平衡状態などを可視化した
+            気液平衡シミュレーションのアーカイブページ。
+            バージョンごとの進化を比較しながら閲覧できます。
+          </p>
+        </section>
+
+        {/* version cards */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {versions.map((v, i) => (
+            <a
+              key={i}
+              href={v.href}
+              className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-7 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300/40 hover:bg-white/10"
+            >
+              <div
+                className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-br ${v.color}`}
+                style={{ mixBlendMode: "soft-light" }}
+              />
+
+              <div className="relative z-10">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm uppercase tracking-[0.3em] text-slate-400">
+                      {v.ver}
+                    </div>
+                    <h2 className="mt-2 text-3xl font-bold">
+                      {v.title}
+                    </h2>
+                  </div>
+
+                  <div
+                    className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${v.color} shadow-lg shadow-cyan-500/20`}
+                  />
+                </div>
+
+                <p className="mt-6 text-slate-300 leading-relaxed">
+                  {v.desc}
+                </p>
+
+                <div className="mt-8 inline-flex items-center gap-2 text-cyan-200 font-medium">
+                  Open Simulator
+                  <span className="transition-transform group-hover:translate-x-1">
+                    →
+                  </span>
+                </div>
+              </div>
+            </a>
+          ))}
+        </section>
+
+        {/* timeline */}
+        <section className="mt-20 rounded-[2rem] border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
+          <div className="flex items-center gap-3">
+            <div className="h-3 w-3 rounded-full bg-cyan-300 animate-pulse" />
+            <h3 className="text-2xl font-bold">Development History</h3>
+          </div>
+
+          <div className="mt-10 flex flex-col gap-8">
+            {versions.map((v, i) => (
+              <div key={i} className="flex gap-5">
+                <div className="flex flex-col items-center">
+                  <div
+                    className={`h-5 w-5 rounded-full bg-gradient-to-br ${v.color}`}
+                  />
+                  {i !== versions.length - 1 && (
+                    <div className="w-px flex-1 bg-white/10 mt-2" />
+                  )}
+                </div>
+
+                <div className="pb-2">
+                  <div className="text-cyan-200 font-semibold">
+                    {v.ver}
+                  </div>
+                  <div className="text-lg font-bold mt-1">{v.title}</div>
+                  <div className="mt-2 text-slate-300">{v.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* footer */}
+        <footer className="mt-16 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-t border-white/10 pt-6 text-slate-400 text-sm">
+          <div>
+            気液平衡シミュレーション ポータル
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-emerald-300" />
+            Experimental Physics / Chemistry Visualization
+          </div>
+        </footer>
+      </main>
+    </div>
+  );
+}
