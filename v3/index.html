@@ -451,6 +451,9 @@ let T = 298;
 // 時間刻み
 let dt = 5;
 
+//気体分子速度係数
+const gasVelocityCoeff = 20;
+
 
 // ========================================
 // 要素取得
@@ -665,8 +668,8 @@ function syncParticles(){
         Math.random() * 240,
         pistonY + Math.random() * (containerHeight - liquidMol * liquidScale - pistonY),
 
-        (Math.random()-0.5)*10,
-        (Math.random()-0.5)*10
+        (Math.random()-0.5)*gasVelocityCoeff,
+        (Math.random()-0.5)*gasVelocityCoeff
       )
     );
   }
@@ -1063,8 +1066,8 @@ function stepSimulation(){
     p.y = liquidTop;
 
     // 速度大きめ
-    p.vx = (Math.random()-0.5)*10;
-    p.vy = -Math.random()*10;
+    p.vx = (Math.random()-0.5)*gasVelocityCoeff;
+    p.vy = -Math.random()*gasVelocityCoeff;
 
     gasParticles.push(p);
   }
