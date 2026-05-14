@@ -1,160 +1,536 @@
-export default function VLEPortal() {
-  const versions = [
-    {
-      ver: "ver1",
-      title: "Prototype",
-      desc: "最初期の気液平衡シミュレーション。蒸発・凝縮の基本挙動を確認。",
-      color: "from-sky-400 to-cyan-300",
-      href: "../v1/index.html",
-    },
-    {
-      ver: "ver2",
-      title: "Particle Model",
-      desc: "デザインを改良し、数値を調整、数量関係を棒グラフで可視化した。",
-      color: "from-cyan-400 to-teal-300",
-      href: "../v2/index.html",
-    },
-    {
-      ver: "ver3",
-      title: "Equilibrium",
-      desc: "温度依存性を追加。",
-      color: "from-indigo-400 to-sky-300",
-      href: "../v3/index.html",
-    },
-    {
-      ver: "ver4",
-      title: "Current",
-      desc: "最新バージョン。実際の数値に近づくように改良。",
-      color: "from-violet-400 to-blue-300",
-      href: "../v4/index.html",
-    },
-  ];
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-  return (
-    <div className="min-h-screen overflow-hidden bg-[#07111f] text-white relative">
-      {/* background glow */}
-      <div className="absolute inset-0">
-        <div className="absolute top-[-120px] left-[-80px] h-[380px] w-[380px] rounded-full bg-cyan-500/20 blur-3xl" />
-        <div className="absolute bottom-[-140px] right-[-100px] h-[420px] w-[420px] rounded-full bg-blue-500/20 blur-3xl" />
+<title>気液平衡シミュレーション</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<style>
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  min-height:100vh;
+  overflow-x:hidden;
+
+  font-family:
+    "Segoe UI",
+    "Hiragino Sans",
+    "Yu Gothic UI",
+    sans-serif;
+
+  color:white;
+
+  background:
+    radial-gradient(circle at top left,
+      rgba(0,255,255,0.15),
+      transparent 35%),
+
+    radial-gradient(circle at bottom right,
+      rgba(0,120,255,0.2),
+      transparent 40%),
+
+    linear-gradient(
+      135deg,
+      #07111f,
+      #0b1d33,
+      #07111f
+    );
+
+  position:relative;
+}
+
+/* grid background */
+
+body::before{
+  content:"";
+
+  position:fixed;
+  inset:0;
+
+  background-image:
+    linear-gradient(
+      rgba(255,255,255,0.05) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255,255,255,0.05) 1px,
+      transparent 1px
+    );
+
+  background-size:40px 40px;
+
+  pointer-events:none;
+}
+
+/* floating glow */
+
+.glow{
+  position:fixed;
+  border-radius:50%;
+  filter:blur(80px);
+  pointer-events:none;
+}
+
+.glow1{
+  width:400px;
+  height:400px;
+
+  background:rgba(0,255,255,0.12);
+
+  top:-120px;
+  left:-100px;
+}
+
+.glow2{
+  width:500px;
+  height:500px;
+
+  background:rgba(0,120,255,0.15);
+
+  bottom:-180px;
+  right:-140px;
+}
+
+/* container */
+
+.container{
+  width:min(1200px, 92%);
+  margin:auto;
+  padding:70px 0;
+}
+
+/* hero */
+
+.badge{
+  display:inline-block;
+
+  padding:8px 18px;
+
+  border:
+    1px solid rgba(0,255,255,0.25);
+
+  border-radius:999px;
+
+  background:
+    rgba(0,255,255,0.08);
+
+  color:#aefcff;
+
+  font-size:14px;
+  letter-spacing:0.08em;
+
+  backdrop-filter:blur(10px);
+}
+
+h1{
+  margin-top:28px;
+
+  font-size:clamp(3rem, 9vw, 6rem);
+
+  line-height:0.95;
+  letter-spacing:-0.03em;
+}
+
+.description{
+  margin-top:28px;
+
+  max-width:720px;
+
+  color:#c5d5e7;
+
+  line-height:1.9;
+  font-size:1.1rem;
+}
+
+/* cards */
+
+.cards{
+  margin-top:70px;
+
+  display:grid;
+
+  grid-template-columns:
+    repeat(auto-fit, minmax(260px, 1fr));
+
+  gap:28px;
+}
+
+.card{
+  position:relative;
+
+  overflow:hidden;
+
+  padding:32px;
+
+  border-radius:30px;
+
+  text-decoration:none;
+  color:white;
+
+  background:
+    rgba(255,255,255,0.06);
+
+  border:
+    1px solid rgba(255,255,255,0.1);
+
+  backdrop-filter:blur(18px);
+
+  transition:
+    transform 0.3s,
+    border-color 0.3s,
+    background 0.3s;
+}
+
+.card:hover{
+  transform:translateY(-6px);
+
+  border-color:
+    rgba(0,255,255,0.35);
+
+  background:
+    rgba(255,255,255,0.09);
+}
+
+.card::before{
+  content:"";
+
+  position:absolute;
+  inset:0;
+
+  opacity:0;
+  transition:opacity 0.3s;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,255,255,0.15),
+      rgba(0,120,255,0.15)
+    );
+}
+
+.card:hover::before{
+  opacity:1;
+}
+
+.card-content{
+  position:relative;
+  z-index:1;
+}
+
+.version{
+  color:#7ddfff;
+
+  letter-spacing:0.2em;
+  font-size:0.85rem;
+}
+
+.card h2{
+  margin-top:10px;
+
+  font-size:2rem;
+}
+
+.card p{
+  margin-top:20px;
+
+  color:#d2ddeb;
+
+  line-height:1.8;
+}
+
+.open{
+  margin-top:28px;
+
+  display:inline-block;
+
+  color:#8cefff;
+  font-weight:bold;
+
+  transition:transform 0.3s;
+}
+
+.card:hover .open{
+  transform:translateX(4px);
+}
+
+/* timeline */
+
+.timeline{
+  margin-top:90px;
+
+  padding:40px;
+
+  border-radius:36px;
+
+  background:
+    rgba(255,255,255,0.05);
+
+  border:
+    1px solid rgba(255,255,255,0.1);
+
+  backdrop-filter:blur(18px);
+}
+
+.timeline h3{
+  font-size:2rem;
+}
+
+.timeline-list{
+  margin-top:40px;
+
+  display:flex;
+  flex-direction:column;
+  gap:30px;
+}
+
+.timeline-item{
+  display:flex;
+  gap:20px;
+}
+
+.dot{
+  width:18px;
+  height:18px;
+
+  flex-shrink:0;
+
+  border-radius:50%;
+
+  background:
+    linear-gradient(
+      135deg,
+      #00ffff,
+      #0077ff
+    );
+
+  margin-top:6px;
+
+  box-shadow:
+    0 0 15px rgba(0,255,255,0.6);
+}
+
+.timeline-item h4{
+  font-size:1.2rem;
+}
+
+.timeline-item p{
+  margin-top:8px;
+
+  color:#cad7e7;
+  line-height:1.8;
+}
+
+/* footer */
+
+footer{
+  margin-top:70px;
+
+  padding-top:24px;
+
+  border-top:
+    1px solid rgba(255,255,255,0.1);
+
+  color:#9db1c9;
+
+  display:flex;
+  justify-content:space-between;
+  gap:20px;
+
+  flex-wrap:wrap;
+}
+
+/* mobile */
+
+@media(max-width:700px){
+
+  .container{
+    padding:50px 0;
+  }
+
+  .card{
+    padding:26px;
+  }
+
+  .timeline{
+    padding:28px;
+  }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="glow glow1"></div>
+<div class="glow glow2"></div>
+
+<div class="container">
+
+  <div class="badge">
+    Vapor-Liquid Equilibrium Simulator
+  </div>
+
+  <h1>
+    気液平衡<br>
+    シミュレーション
+  </h1>
+
+  <p class="description">
+    蒸発・凝縮・気液平衡・温度依存性などを
+    可視化したシミュレーションシリーズ。
+    ver1からver4までの進化を比較しながら閲覧できます。
+  </p>
+
+  <section class="cards">
+
+    <a class="card" href="./ver1/">
+      <div class="card-content">
+        <div class="version">VER1</div>
+        <h2>Prototype</h2>
+
+        <p>
+          最初期の気液平衡モデル。
+          蒸発と凝縮の基本的な挙動を実装。
+        </p>
+
+        <div class="open">
+          Open Simulator →
+        </div>
+      </div>
+    </a>
+
+    <a class="card" href="./ver2/">
+      <div class="card-content">
+        <div class="version">VER2</div>
+        <h2>Particle</h2>
+
+        <p>
+          粒子運動や温度依存性を強化した
+          シミュレーション。
+        </p>
+
+        <div class="open">
+          Open Simulator →
+        </div>
+      </div>
+    </a>
+
+    <a class="card" href="./ver3/">
+      <div class="card-content">
+        <div class="version">VER3</div>
+        <h2>Equilibrium</h2>
+
+        <p>
+          圧力変化や平衡状態への収束を
+          よりリアルに再現。
+        </p>
+
+        <div class="open">
+          Open Simulator →
+        </div>
+      </div>
+    </a>
+
+    <a class="card" href="./ver4/">
+      <div class="card-content">
+        <div class="version">VER4</div>
+        <h2>Current</h2>
+
+        <p>
+          最新版。
+          UI・描画・物理モデルを大幅改良。
+        </p>
+
+        <div class="open">
+          Open Simulator →
+        </div>
+      </div>
+    </a>
+
+  </section>
+
+  <section class="timeline">
+
+    <h3>Development History</h3>
+
+    <div class="timeline-list">
+
+      <div class="timeline-item">
+        <div class="dot"></div>
+
+        <div>
+          <h4>ver1 - Prototype</h4>
+
+          <p>
+            気液平衡シミュレーションの原型。
+          </p>
+        </div>
       </div>
 
-      {/* grid overlay */}
-      <div
-        className="absolute inset-0 opacity-[0.07]"
-        style={{
-          backgroundImage:
-            "linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
-        }}
-      />
+      <div class="timeline-item">
+        <div class="dot"></div>
 
-      <main className="relative z-10 max-w-6xl mx-auto px-6 py-16">
-        {/* hero */}
-        <section className="mb-16">
-          <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-4 py-1 text-sm text-cyan-200 backdrop-blur">
-            Vapor-Liquid Equilibrium Simulator
-          </div>
+        <div>
+          <h4>ver2 - Particle</h4>
 
-          <h1 className="mt-6 text-5xl md:text-7xl font-black tracking-tight leading-none">
-            気液平衡
-            <br />
-            シミュレーション
-          </h1>
-
-          <p className="mt-6 max-w-2xl text-lg text-slate-300 leading-relaxed">
-            蒸発・凝縮・温度依存性・平衡状態などを可視化した
-            気液平衡シミュレーションのアーカイブページ。
-            バージョンごとの進化を比較しながら閲覧できます。
+          <p>
+            粒子モデルと温度変化を導入。
           </p>
-        </section>
+        </div>
+      </div>
 
-        {/* version cards */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {versions.map((v, i) => (
-            <a
-              key={i}
-              href={v.href}
-              className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-7 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300/40 hover:bg-white/10"
-            >
-              <div
-                className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-br ${v.color}`}
-                style={{ mixBlendMode: "soft-light" }}
-              />
+      <div class="timeline-item">
+        <div class="dot"></div>
 
-              <div className="relative z-10">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-sm uppercase tracking-[0.3em] text-slate-400">
-                      {v.ver}
-                    </div>
-                    <h2 className="mt-2 text-3xl font-bold">
-                      {v.title}
-                    </h2>
-                  </div>
+        <div>
+          <h4>ver3 - Equilibrium</h4>
 
-                  <div
-                    className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${v.color} shadow-lg shadow-cyan-500/20`}
-                  />
-                </div>
+          <p>
+            平衡状態への収束挙動を改善。
+          </p>
+        </div>
+      </div>
 
-                <p className="mt-6 text-slate-300 leading-relaxed">
-                  {v.desc}
-                </p>
+      <div class="timeline-item">
+        <div class="dot"></div>
 
-                <div className="mt-8 inline-flex items-center gap-2 text-cyan-200 font-medium">
-                  Open Simulator
-                  <span className="transition-transform group-hover:translate-x-1">
-                    →
-                  </span>
-                </div>
-              </div>
-            </a>
-          ))}
-        </section>
+        <div>
+          <h4>ver4 - Current</h4>
 
-        {/* timeline */}
-        <section className="mt-20 rounded-[2rem] border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
-          <div className="flex items-center gap-3">
-            <div className="h-3 w-3 rounded-full bg-cyan-300 animate-pulse" />
-            <h3 className="text-2xl font-bold">Development History</h3>
-          </div>
+          <p>
+            最新物理モデルとUIを統合。
+          </p>
+        </div>
+      </div>
 
-          <div className="mt-10 flex flex-col gap-8">
-            {versions.map((v, i) => (
-              <div key={i} className="flex gap-5">
-                <div className="flex flex-col items-center">
-                  <div
-                    className={`h-5 w-5 rounded-full bg-gradient-to-br ${v.color}`}
-                  />
-                  {i !== versions.length - 1 && (
-                    <div className="w-px flex-1 bg-white/10 mt-2" />
-                  )}
-                </div>
-
-                <div className="pb-2">
-                  <div className="text-cyan-200 font-semibold">
-                    {v.ver}
-                  </div>
-                  <div className="text-lg font-bold mt-1">{v.title}</div>
-                  <div className="mt-2 text-slate-300">{v.desc}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* footer */}
-        <footer className="mt-16 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-t border-white/10 pt-6 text-slate-400 text-sm">
-          <div>
-            気液平衡シミュレーション ポータル
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-emerald-300" />
-            Experimental Physics / Chemistry Visualization
-          </div>
-        </footer>
-      </main>
     </div>
-  );
-}
+
+  </section>
+
+  <footer>
+
+    <div>
+      気液平衡シミュレーション ポータル
+    </div>
+
+    <div>
+      Experimental Physics / Chemistry Visualization
+    </div>
+
+  </footer>
+
+</div>
+
+</body>
+</html>
