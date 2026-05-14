@@ -417,6 +417,7 @@ input[type="range"]{
 <script>
 
 //運動エネルギーは温度の平方根に比例する
+//棒グラフを矢印で拮抗する感じに
 
 // ========================================
 // 状態変数
@@ -670,8 +671,8 @@ function syncParticles(){
         Math.random() * 240,
         pistonY + Math.random() * (containerHeight - liquidMol * liquidScale - pistonY),
 
-        (Math.random()-0.5)*gasVelocityCoeff*dt/5,
-        (Math.random()-0.5)*gasVelocityCoeff*dt/5
+        (Math.random()-0.5)*gasVelocityCoeff,//*dt/5,
+        (Math.random()-0.5)*gasVelocityCoeff.//*dt/5
       )
     );
   }
@@ -1068,8 +1069,8 @@ function stepSimulation(){
     p.y = liquidTop;
 
     // 速度大きめ
-    p.vx = (Math.random()-0.5)*gasVelocityCoeff*dt/5;
-    p.vy = -Math.random()*gasVelocityCoeff*dt/5;
+    p.vx = (Math.random()-0.5)*gasVelocityCoeff,//*dt/5;
+    p.vy = -Math.random()*gasVelocityCoeff,//*dt/5;
 
     gasParticles.push(p);
   }
