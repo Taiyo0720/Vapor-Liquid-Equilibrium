@@ -665,8 +665,8 @@ function syncParticles(){
         Math.random() * 240,
         pistonY + Math.random() * (containerHeight - liquidMol * liquidScale - pistonY),
 
-        (Math.random()-0.5)*4,
-        (Math.random()-0.5)*4
+        (Math.random()-0.5)*10,
+        (Math.random()-0.5)*10
       )
     );
   }
@@ -1063,8 +1063,8 @@ function stepSimulation(){
     p.y = liquidTop;
 
     // 速度大きめ
-    p.vx = (Math.random()-0.5)*4;
-    p.vy = -Math.random()*3;
+    p.vx = (Math.random()-0.5)*10;
+    p.vy = -Math.random()*10;
 
     gasParticles.push(p);
   }
