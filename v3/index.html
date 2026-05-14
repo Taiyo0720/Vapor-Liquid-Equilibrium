@@ -343,11 +343,15 @@ input[type="range"]{
 // ピストン位置（上から）
 let pistonY = 140;
 
+const liquidMol0 = 40;
+
+const gasMol0 = 10;
+
 // 液体 mol
-let liquidMol = 40;
+let liquidMol = liquidMol0;
 
 // 気体 mol
-let gasMol = 10;
+let gasMol = gasMol0;
 
 
 // ========================================
@@ -874,7 +878,7 @@ function updateScene(){
   let stateText = "";
   let stateColor;
 
-  if(liquidMol < 0.4){
+  if(liquidMol < 0.3){
 
     stateText = "気体のみ";
     stateColor = "#e2e8f0";
@@ -983,6 +987,12 @@ function stepSimulation(){
 
   gasMol =
     Math.max(gasMol, 0);
+  
+  //異常更新時の数値適正化
+  if(gasMol < 0.01){
+    gasMol = 0.01;
+    liquidMol = liquidMol0 + gasMol0 - 0.01;
+  }
 
   const targetGas = Math.floor(gasMol * 2);
   const targetLiquid = Math.floor(liquidMol * 2);
