@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>気液平衡シミュレータ</title>
+
+<style>
+
+body{
+  margin:50px;
+  min-height:100vh;
+
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:40px;
+
+  background:
+    radial-gradient(
+      circle at top,
+      #1e293b,
+      #0f172a 60%
+    );
+
+  font-family:
+    "Inter",
+    "Noto Sans JP",
+    sans-serif;
+
+  color:#e2e8f0;
+}
+
+.container{
+  position:relative;
+
+  width:240px;
+  height:420px;
+
+  border-left:4px solid rgba(255,255,255,0.15);
+  border-right:4px solid rgba(255,255,255,0.15);
+  border-bottom:4px solid rgba(255,255,255,0.15);
+
+  border-radius:18px 18px 10px 10px;
+
+  overflow:hidden;
+
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.04),
+      rgba(255,255,255,0.02)
+    );
+
+  backdrop-filter: blur(10px);
+
+  box-shadow:
+    0 10px 40px rgba(0,0,0,0.45);
+}
+
+/* 気体領域 */
+.gas{
+  position:absolute;
+  left:0;
+  width:100%;
+
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(120,200,255,0.10),
+      rgba(120,200,255,0.03)
+    );
+}
+
+/* 液体 */
+.liquid{
+  position:absolute;
+  left:0;
+  bottom:0;
+  width:100%;
+
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(110,180,255,0.75),
+      rgba(40,90,220,0.92)
+    );
+
+  box-shadow:
+    inset 0 8px 20px rgba(255,255,255,0.15),
+    0 0 20px rgba(80,140,255,0.4);
+}
+
+/* ピストン */
+.piston{
+  position:absolute;
+
+  left:-12px;
+  width:calc(100% + 24px);
+  height:24px;
+
+  border-radius:8px;
+
+  background:
+    linear-gradient(
+      to bottom,
+      #d1d5db,
+      #6b7280
+    );
+
+  box-shadow:
+    0 4px 14px rgba(0,0,0,0.35);
+}
+
+/* シャフト */
+.shaft{
+  position:absolute;
+
+  left:50%;
+  transform:translateX(-50%);
+
+  width:14px;
+
+  background:
+    linear-gradient(
+      to right,
+      #9ca3af,
+      #e5e7eb,
+      #9ca3af
+    );
+}
+
+.controls{
+  display:flex;
+  gap:20px;
+
+  align-items:flex-start;
+
+  padding:24px;
+
+  border-radius:20px;
+
+  background:
+    rgba(255,255,255,0.06);
+
+  backdrop-filter: blur(16px);
+
+  box-shadow:
+    0 10px 30px rgba(0,0,0,0.35);
+}
+
+.leftPanel{
+  width:260px;
+}
+
+label{
+  display:block;
+  margin-top:18px;
+
+  font-size:14px;
+  font-weight:600;
+
+  color:#cbd5e1;
+}
+
+.info{
+  margin-top:24px;
+
+  padding:16px;
+
+  border-radius:14px;
+
+  background:
+    rgba(255,255,255,0.05);
+
+  line-height:1.8;
+
+  font-size:14px;
+
+  color:#dbeafe;
+}
+
+#moleculeCanvas{
+  position:absolute;
+  left:0;
+  top:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+}
+
+input[type="range"]{
+  width:100%;
+  margin-top:5px;
+
+  accent-color:#60a5fa;
+}
+
+#barCanvas{
+  width:220px;
+  height:360px;
+
+  border-radius:16px;
+
+  background:
+    rgba(255,255,255,0.05);
+
+  box-shadow:
+    inset 0 0 20px rgba(255,255,255,0.03);
+}
+
+.app{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:28px;
+}
+
+.mainArea{
+  display:flex;
+  gap:40px;
+  align-items:flex-start;
+}
+
+.title{
+  margin:0;
+
+  font-size:38px;
+  font-weight:800;
+
+  letter-spacing:0.08em;
+
+  color:#e2e8f0;
+
+  text-shadow:
+    0 4px 18px rgba(120,180,255,0.35);
+}
+
+.page{
+
+  display:flex;
+  flex-direction:column;
+
+  align-items:center;
+
+  gap:32px;
+}
+
+</style>
+</head>
+
+<body>
+<div class="page">
+<div class="app">
+
+<h1 class="title">気-液簡易シミュレータ（定積・定温条件）</h1>
+
+<div class="mainArea">
+<div class="container">
+
+  <canvas id="moleculeCanvas"></canvas>
+
+  <div class="gas" id="gas"></div>
+
+  <div class="liquid" id="liquid"></div>
+
+  <div class="shaft" id="shaft"></div>
+
+  <div class="piston" id="piston"></div>
+
+</div>
+
+
+<div class="controls">
+
+  <canvas
+    id="barCanvas"
+    width="260"
+    height="420"
+  ></canvas>
+
+  <div class="leftPanel">
+
+    <label>
+      ピストン位置<br>（上端-液面手前間での相対位置）
+      <input
+        type="range"
+        id="pistonSlider"
+        min="40"
+        max="360"
+        value="140"
+      >
+    </label>
+
+    <label>
+      停止←シミュレーション速度→最大
+      <input
+        type="range"
+        id="dtSlider"
+        min="0"
+        max="5"
+        value="2"
+      >
+    </label>
+
+    <label>
+    物質
+    <select id="substanceSelect">
+
+      <option value="water">
+        水
+      </option>
+
+      <option value="ethanol">
+        エタノール
+      </option>
+
+      <option value="diethyleter">
+        ジエチルエーテル
+      </option>
+
+    </select>
+  </label>
+
+    <label>
+      温度（=<span id="tempValue">100</span>℃）
+      <input
+        type="range"
+        id="tempSlider"
+        min="0"
+        max="200"
+        value="100"
+      >
+    </label>
+
+    <div class="info" id="info"></div>
+
+  </div>
+
+</div>
+</div>
+</div>
+
+<div>
+  <p>5/14 19:38更新</p>
+  <p>
+    シミュレーション速度は速い方が気液平衡に達するまでが早くなりますが、<br>
+    遅い方が計算値が安定します。<br>
+    シミュレーションにあたっての仮定（実際の挙動には即しません）<br>
+    ・蒸発量は絶対温度に、凝縮量は気体の濃度に比例する。<br>
+    ・凝固はしないものとする。
+  </p>
+</div>
+</div>
+
+<script>
+
+//運動エネルギーは温度の平方根に比例する
+
+// ========================================
+// 状態変数
+// ========================================
+
+// ピストン位置（上から）
+let pistonY = 140;
+
+const liquidMol0 = 40;
+
+const gasMol0 = 10;
+
+// 液体 mol
+let liquidMol = liquidMol0;
+
+// 気体 mol
+let gasMol = gasMol0;
+
+
+// ========================================
+// 定数
+// ========================================
+
+const containerHeight = 420;
+
+// 液体1 molあたりの高さpx
+const liquidScale = 2;
+
+// 蒸発係数
+const evaporationRate = 0.03;
+
+// 凝縮係数
+//const condensationCoeff = 0.21;
+
+//気体定数 Pa*L/(mol*K)
+const gasConstant = 8.31446 * 10**3
+
+//温度（K）
+let T = 373.15;
+
+// 時間刻み
+let dt = 2;
+
+//気体分子速度係数
+const gasVelocityCoeff = 100;
+
+//1molが何粒子に相当するか
+const particleRate = 5;
+
+
+// ========================================
+// 要素取得
+// ========================================
+
+const piston = document.getElementById("piston");
+const shaft = document.getElementById("shaft");
+const gas = document.getElementById("gas");
+const liquid = document.getElementById("liquid");
+const tempValue = document.getElementById("tempValue");
+
+const pistonSlider =
+  document.getElementById("pistonSlider");
+const dtSlider =
+  document.getElementById("dtSlider");
+const tempSlider =
+  document.getElementById("tempSlider");
+
+const info = document.getElementById("info");
+
+const canvas =
+  document.getElementById("moleculeCanvas");
+
+const ctx =
+  canvas.getContext("2d");
+
+const barCanvas =
+  document.getElementById("barCanvas");
+
+const barCtx =
+  barCanvas.getContext("2d");
+
+const substanceSelect =
+  document.getElementById(
+    "substanceSelect"
+  );
+
+substanceSelect.addEventListener(
+  "change",
+  ()=>{
+
+    currentSubstance =
+      substances[
+        substanceSelect.value
+      ];
+
+    updateLiquidAppearance();
+  }
+);
+
+canvas.width = 240;
+canvas.height = 420;
+let gasParticles = [];
+let liquidParticles = [];
+
+const substances = {
+
+  water: {
+    name: "水",
+    A: 8.07126,
+    B: 1730.63,
+    C: 233.426,
+
+    liquidColorTop:
+      "rgba(110,180,255,0.75)",
+
+    liquidColorBottom:
+      "rgba(40,90,220,0.92)"
+  },
+
+  ethanol: {
+    name: "エタノール",
+    A: 8.209683,
+    B: 1642.89,
+    C: 230.300,
+
+    liquidColorTop:
+      "rgba(255,180,120,0.75)",
+
+    liquidColorBottom:
+      "rgba(220,120,40,0.92)"
+  },
+
+  diethyleter: {
+    name: "ジエチルエーテル",
+    A: 6.857856,
+    B: 1064.606,
+    C: 232.688,
+
+    liquidColorTop:
+      "rgba(255,120,180,0.75)",
+
+    liquidColorBottom:
+      "rgba(180,40,120,0.92)"
+  }
+
+};
+
+function updateLiquidAppearance(){
+
+  liquid.style.background =
+    `
+    linear-gradient(
+      to bottom,
+      ${currentSubstance.liquidColorTop},
+      ${currentSubstance.liquidColorBottom}
+    )
+    `;
+}
+
+function vaporPressure(T){
+    //Tは単位K, Paを返す
+    const {A, B, C} = currentSubstance
+
+    return 10**(A-B/(C+T-273.15))*133.322;
+}
+
+let currentSubstance = substances.water;
+
+function drawBars(){
+
+  barCtx.clearRect(0,0,260,420);
+
+  // =====================
+  // データ
+  // =====================
+
+  const liquidValue = liquidMol;
+  const gasValue = gasMol;
+
+  const liquidHeight =
+    liquidMol * liquidScale;
+
+  const gasHeight =
+    containerHeight - pistonY - liquidHeight;
+
+  const gasVolume =
+    Math.max(gasHeight, 0.1);
+
+  const concentration =
+    gasMol / gasVolume;
+
+  const evaporation =
+    liquidMol > 0
+    ? evaporationRate * (T / 298)
+    : 0;
+
+  const condensation =
+    evaporationRate * gasConstant * T**2 / 298 / vaporPressure(T)
+    * concentration;
+
+  // スケール
+  const molScale = 2.5;
+  const flowScale = 2000;
+
+
+  // =====================
+  // タイトル
+  // =====================
+
+  barCtx.fillStyle = "white";
+  barCtx.font = "16px sans-serif";
+  barCtx.textAlign = "center";
+  barCtx.textBaseline = "middle";
+
+  barCtx.fillText(
+    "液体 vs 気体",
+    60,
+    20
+  );
+
+  // =====================
+  // 液体バー
+  // =====================
+
+  barCtx.fillStyle =
+    "rgba(70,140,255,0.8)";
+
+  barCtx.fillRect(
+    70,
+    160 - liquidValue * molScale,
+    40,
+    liquidValue * molScale
+  );
+
+  // =====================
+  // 気体バー
+  // =====================
+
+  barCtx.fillStyle =
+    "rgba(100,220,255,0.8)";
+
+  barCtx.fillRect(
+    130,
+    160 - gasValue * molScale,
+    40,
+    gasValue * molScale
+  );
+
+  // ラベル
+
+  barCtx.fillStyle = "white";
+
+  barCtx.fillText(
+    "液",
+    90,
+    180
+  );
+
+  barCtx.fillText(
+    "気",
+    150,
+    180
+  );
+
+
+  // =====================
+  // 蒸発 ⇄ 凝縮
+  // =====================
+
+  const centerY = 320;
+
+  barCtx.fillStyle = "white";
+  barCtx.font = "16px sans-serif";
+
+  barCtx.fillText(
+    "蒸発 ⇄ 凝縮",
+    60,
+    240
+  );
+
+  // ---------------------
+  // 強さ
+  // ---------------------
+
+  const evapStrength =
+    Math.max(3, evaporation * 900);
+
+  const condStrength =
+    Math.max(3, condensation * 900);
+
+  // 上限
+  const evapSize =
+    Math.min(evapStrength, 56);
+
+  const condSize =
+    Math.min(condStrength, 56);
+
+  // ---------------------
+  // 蒸発
+  // ---------------------
+
+  barCtx.fillStyle = "orange";
+
+  barCtx.font =
+    `bold ${evapSize}px sans-serif`;
+
+  barCtx.textAlign = "right";
+
+  barCtx.fillText(
+    "蒸発 →",
+    130,
+    centerY
+  );
+
+  // ---------------------
+  // 凝縮
+  // ---------------------
+
+  barCtx.fillStyle = "#22c55e";
+
+  barCtx.font =
+    `bold ${condSize}px sans-serif`;
+
+  barCtx.textAlign = "left";
+
+  barCtx.fillText(
+    "← 凝縮",
+    130,
+    centerY
+  );
+
+}
+
+function createParticle(x, y, vx, vy){
+  return {
+    x,
+    y,
+    vx,
+    vy
+  };
+}
+
+function syncParticles(){
+
+  // mol → 粒子数
+  const targetGas =
+    Math.floor(gasMol * particleRate);
+
+  const targetLiquid =
+    Math.floor(liquidMol * particleRate);
+
+
+  // -------------------
+  // 気体粒子
+  // -------------------
+
+  while(gasParticles.length < targetGas){
+
+    gasParticles.push(
+      createParticle(
+        Math.random() * 240,
+        pistonY + Math.random() * (containerHeight - liquidMol * liquidScale - pistonY),
+
+        (Math.random()-0.5)*gasVelocityCoeff,
+        (Math.random()-0.5)*gasVelocityCoeff
+      )
+    );
+  }
+
+  while(gasParticles.length > targetGas){
+    gasParticles.pop();
+  }
+
+
+  // -------------------
+  // 液体粒子
+  // -------------------
+
+  const liquidHeight =
+    liquidMol * liquidScale;
+
+  while(liquidParticles.length < targetLiquid){
+
+    liquidParticles.push(
+      createParticle(
+        Math.random() * 240,
+        containerHeight - Math.random() * liquidHeight,
+
+        (Math.random()-0.5)*0.8,
+        (Math.random()-0.5)*0.8
+      )
+    );
+  }
+
+  while(liquidParticles.length > targetLiquid){
+    liquidParticles.pop();
+  }
+}
+
+
+function updateParticles(){
+
+  const liquidHeight =
+    liquidMol * liquidScale;
+
+  const gasTop = pistonY;
+  const gasBottom =
+    containerHeight - liquidHeight;
+
+  // ===================
+  // 気体
+  // ===================
+
+  for(const p of gasParticles){
+
+    p.x += p.vx * dt / 5 * T / 298;
+    p.y += p.vy * dt / 5 * T / 298;
+
+    // 壁反射
+
+    if(p.x < 0 || p.x > 240){
+      p.vx *= -1;
+    }
+
+    if(p.y < gasTop || p.y > gasBottom){
+      p.vy *= -1;
+    }
+  }
+
+
+  // ===================
+  // 液体
+  // ===================
+
+  const liquidTop =
+    containerHeight - liquidHeight;
+
+  for(const p of liquidParticles){
+
+    p.x += (p.vx + (Math.random() - 0.5) * 2) * dt / 5 * Math.sqrt(T / 298);
+    p.y += (p.vy + (Math.random() - 0.5) * 2) * dt / 5 * Math.sqrt(T / 298);
+
+    if(p.x < 0 || p.x > 240){
+      p.vx *= -1;
+    }
+
+    if(p.y < liquidTop || p.y > containerHeight){
+      p.vy *= -1;
+    }
+  }
+}
+
+function drawParticles(){
+
+  const gasTop = pistonY;
+  const gasBottom = containerHeight - liquidMol * liquidScale;
+  const liquidTop = gasBottom;
+
+  ctx.clearRect(0,0,240,containerHeight);
+
+  // 気体
+  ctx.fillStyle = "cyan";
+
+  for(const p of gasParticles){
+
+    // -------------------
+    // 描画
+    // -------------------
+
+    ctx.beginPath();
+
+    ctx.arc(
+      p.x,
+      p.y,
+      3,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fill();
+  }
+
+
+  // 液体
+  ctx.fillStyle = "cyan";
+
+  for(const p of liquidParticles){
+
+    // -------------------
+    // 描画
+    // -------------------
+
+    ctx.beginPath();
+
+    ctx.arc(
+      p.x,
+      p.y,
+      3,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fill();
+  }
+}
+
+function clampParticles(){
+
+  const liquidHeight =
+    liquidMol * liquidScale;
+
+  const gasTop = pistonY;
+  const gasBottom =
+    containerHeight - liquidHeight;
+
+  const liquidTop = gasBottom;
+
+  // 気体粒子
+  for(const p of gasParticles){
+
+    p.y = Math.max(gasTop,
+          Math.min(gasBottom, p.y));
+  }
+
+  // 液体粒子
+  for(const p of liquidParticles){
+
+    if(p.y <= liquidTop + 5){
+      p.vy = Math.min(2, Math.abs(p.vy));
+    }
+    p.y = Math.max(liquidTop + 5,
+          Math.min(containerHeight, p.y));
+  }
+}
+    
+// ========================================
+// 描画更新
+// ========================================
+
+function updateScene(){
+
+  // --------------------
+  // 液体高さ
+  // --------------------
+
+  const liquidHeight =
+    liquidMol * liquidScale;
+  // --------------------
+  // ピストン侵入防止
+  // --------------------
+  
+  // 最低でも1pxは気相を残す
+  const maxPistonY =
+    containerHeight
+    - liquidHeight
+    - 1;
+  
+  // ピストン位置制限
+  pistonY = Math.min(
+    pistonY,
+    maxPistonY
+  );
+  
+  // スライダー側にも反映
+  pistonSlider.max = maxPistonY;
+  pistonSlider.value = pistonY;
+
+  // --------------------
+  // 気体体積
+  // --------------------
+  // ピストン下端までの高さ
+  // から液体部分を引く
+
+  const gasHeight =
+    containerHeight - pistonY - liquidHeight;
+
+  const gasVolume =
+    Math.max(gasHeight, 1);
+
+
+  // --------------------
+  // ピストン
+  // --------------------
+
+  piston.style.top =
+    pistonY - 24 +  "px";
+
+  shaft.style.top = "0px";
+
+  shaft.style.height =
+    pistonY + "px";
+
+
+  // --------------------
+  // 気体領域
+  // --------------------
+
+  gas.style.top = pistonY + "px";
+
+  gas.style.height =
+    gasHeight + "px";
+
+
+  // --------------------
+  // 液体
+  // --------------------
+
+  liquid.style.height =
+    liquidHeight + "px";
+
+
+  // --------------------
+  // 情報表示
+  // --------------------
+
+  const concentration =
+    gasMol / gasVolume;
+
+  const evaporation =
+    liquidMol > 0
+    ? evaporationRate * dt * (T / 298)
+    : 0;
+
+  const condensation =
+    evaporationRate * gasConstant * T**2 / 298 / vaporPressure(T)
+    * concentration
+    * dt;
+
+  let stateText = "";
+  let stateColor;
+
+  if(liquidMol < 0.4){
+
+    stateText = "気体のみ";
+    stateColor = "#e2e8f0";
+
+  }else if(gasMol < 0.01){
+
+    stateText = "液体のみ";
+    stateColor = "#e2e8f0";
+  }else{
+
+    const diff =
+      evaporation - condensation;
+
+    if(diff > 10**(-7)){
+
+      stateText = "蒸発が優勢";
+      stateColor = "#f59e0b"; // 蒸発
+
+    }else if(diff < -(10**(-7))){
+
+      stateText = "凝縮が優勢";
+      stateColor = "#22c55e"; // 凝縮
+
+    }else{
+      if (dt > 0){
+        stateText = "気液平衡";
+      } else {
+        stateText = "停止中";
+      }
+      stateColor = "#38bdf8"; // 平衡または停止
+    }
+  }
+
+  info.innerHTML = `
+    <span style="color:${stateColor};
+                 font-weight:bold;">
+      ${stateText}
+    </span><br>
+    気体体積: ${(gasVolume).toFixed(3)}L<br>
+    気体濃度: ${(concentration).toFixed(5)}mol/L<br>
+    気体圧力: ${(concentration * gasConstant * T / 100).toFixed(2)}hPa
+  `;
+}
+
+
+// ========================================
+// 時間発展
+// ========================================
+
+function stepSimulation(){
+
+  // --------------------
+  // 液体高さ
+  // --------------------
+
+  const liquidHeight =
+    liquidMol * liquidScale;
+
+  // 気体高さ
+  let gasHeight =
+    containerHeight - pistonY - liquidHeight;
+
+  gasHeight = Math.max(gasHeight, 0.1);
+
+  const gasVolume = gasHeight;
+
+
+  // --------------------
+  // 蒸発
+  // 液体がある限り一定
+  // --------------------
+
+  let evaporation = 0;
+
+  if(liquidMol > 0){
+    evaporation =
+      evaporationRate * dt * (T / 298);
+  }
+
+
+  // --------------------
+  // 凝縮
+  // 気体濃度に比例
+  // --------------------
+
+  const concentration =
+    gasMol / gasVolume;
+
+  const condensation =
+    evaporationRate * gasConstant * T**2 / 298 / vaporPressure(T)
+    *dt * concentration;
+
+
+  // --------------------
+  // 更新
+  // --------------------
+
+  const delta =
+    evaporation - condensation;
+
+  liquidMol -= delta;
+  gasMol += delta;
+
+
+  // 負防止
+
+  liquidMol =
+    Math.max(liquidMol, 0);
+
+  gasMol =
+    Math.max(gasMol, 0);
+  
+  //異常更新時の数値適正化
+  if(liquidMol > liquidMol0 + gasMol0){
+    gasMol = 0;
+    liquidMol = liquidMol0 + gasMol0;
+  }
+
+  const targetGas = Math.floor(gasMol * particleRate);
+  const targetLiquid = Math.floor(liquidMol * particleRate);
+
+  while (gasParticles.length < targetGas){
+
+    if(liquidParticles.length === 0) break;
+
+    // 液体から1粒子取り出す
+    const p = liquidParticles.pop();
+
+    // 液面位置
+    const liquidHeight =
+      liquidMol * liquidScale;
+
+    const liquidTop =
+      containerHeight - liquidHeight;
+
+    // 液面から発生
+    p.y = liquidTop;
+
+    // 速度大きめ
+    p.vx = (Math.random()-0.5)*gasVelocityCoeff;
+    p.vy = -Math.random()*gasVelocityCoeff;
+
+    gasParticles.push(p);
+  }
+  while (liquidParticles.length < targetLiquid){
+
+    if(gasParticles.length === 0) break;
+
+    // 気体粒子取り出し
+    const p = gasParticles.pop();
+
+    const liquidHeight =
+      liquidMol * liquidScale;
+
+    const liquidTop =
+      containerHeight - liquidHeight;
+
+    // 液面へ
+    p.y = liquidTop;
+
+    // 液体らしく低速化
+    p.vx = (Math.random()-0.5)*0.8;
+    p.vy = (Math.random()-0.5)*0.8;
+
+    liquidParticles.push(p);
+  }
+
+  updateScene();
+  updateParticles();
+  clampParticles();
+  drawParticles();
+  drawBars();
+}
+
+
+// ========================================
+// スライダー
+// ========================================
+
+pistonSlider.addEventListener("input", ()=>{
+
+  pistonY =
+    Number(pistonSlider.value);
+
+  updateScene();
+  clampParticles();
+});
+
+dtSlider.addEventListener("input", ()=>{
+  dt =
+    Number(dtSlider.value);
+
+  updateScene();
+});
+tempSlider.addEventListener("input", ()=>{
+  T =
+    Number(tempSlider.value) + 273.15;
+  tempValue.textContent = T - 273.15;
+
+  updateScene();
+});
+
+
+
+// ========================================
+// 初期描画
+// ========================================
+
+syncParticles();
+updateLiquidAppearance();
+updateScene();
+
+
+// ========================================
+// ループ
+// ========================================
+
+setInterval(stepSimulation, 30);
+
+</script>
+
+</body>
+</html>
