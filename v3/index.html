@@ -414,7 +414,7 @@ input[type="range"]{
 </div>
 </header>
 
-<footer>5/14 15:24更新</footer>
+<footer>5/14 15:30更新</footer>
 
 
 <script>
@@ -545,7 +545,7 @@ function drawBars(){
 
   barCtx.fillText(
     "液体 vs 気体",
-    20,
+    60,
     20
   );
 
@@ -598,12 +598,14 @@ function drawBars(){
   // 蒸発 ⇄ 凝縮
   // =====================
 
+  const centerY = 320;
+
   barCtx.fillStyle = "white";
   barCtx.font = "16px sans-serif";
 
   barCtx.fillText(
     "蒸発 ⇄ 凝縮",
-    20,
+    60,
     240
   );
 
@@ -638,7 +640,7 @@ function drawBars(){
   barCtx.fillText(
     "蒸発 →",
     120,
-    320
+    centerY
   );
 
   // ---------------------
@@ -654,8 +656,8 @@ function drawBars(){
 
   barCtx.fillText(
     "← 凝縮",
-    140,
-    320
+    120,
+    centerY
   );
 
 }
