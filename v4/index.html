@@ -831,8 +831,8 @@ function updateParticles(){
 
   for(const p of gasParticles){
 
-    p.x += p.vx * dt / 5 * T / 298;
-    p.y += p.vy * dt / 5 * T / 298;
+    p.x += p.vx * dt / 5 * Math.sqrt(T / 298);
+    p.y += p.vy * dt / 5 * Math.sqrt(T / 298);
 
     // 壁反射
 
