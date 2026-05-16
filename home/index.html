@@ -4,7 +4,614 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-<title>気液平衡シミュレーション</title>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>化学シミュレーション ポータル</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<style>
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  min-height:100vh;
+  overflow-x:hidden;
+
+  font-family:
+    "Segoe UI",
+    "Hiragino Sans",
+    "Yu Gothic UI",
+    sans-serif;
+
+  color:white;
+
+  background:
+    radial-gradient(circle at top left,
+      rgba(0,255,255,0.15),
+      transparent 35%),
+
+    radial-gradient(circle at bottom right,
+      rgba(0,120,255,0.2),
+      transparent 40%),
+
+    linear-gradient(
+      135deg,
+      #07111f,
+      #0b1d33,
+      #07111f
+    );
+
+  position:relative;
+}
+
+/* grid background */
+
+body::before{
+  content:"";
+
+  position:fixed;
+  inset:0;
+
+  background-image:
+    linear-gradient(
+      rgba(255,255,255,0.05) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255,255,255,0.05) 1px,
+      transparent 1px
+    );
+
+  background-size:40px 40px;
+
+  pointer-events:none;
+}
+
+/* floating glow */
+
+.glow{
+  position:fixed;
+  border-radius:50%;
+  filter:blur(80px);
+  pointer-events:none;
+}
+
+.glow1{
+  width:400px;
+  height:400px;
+
+  background:rgba(0,255,255,0.12);
+
+  top:-120px;
+  left:-100px;
+}
+
+.glow2{
+  width:500px;
+  height:500px;
+
+  background:rgba(0,120,255,0.15);
+
+  bottom:-180px;
+  right:-140px;
+}
+
+/* container */
+
+.container{
+  width:min(1200px, 92%);
+  margin:auto;
+  padding:70px 0;
+}
+
+/* hero */
+
+.badge{
+  display:inline-block;
+
+  padding:8px 18px;
+
+  border:
+    1px solid rgba(0,255,255,0.25);
+
+  border-radius:999px;
+
+  background:
+    rgba(0,255,255,0.08);
+
+  color:#aefcff;
+
+  font-size:14px;
+  letter-spacing:0.08em;
+
+  backdrop-filter:blur(10px);
+}
+
+h1{
+  margin-top:28px;
+
+  font-size:clamp(3rem, 9vw, 6rem);
+
+  line-height:0.95;
+  letter-spacing:-0.03em;
+}
+
+.description{
+  margin-top:28px;
+
+  max-width:720px;
+
+  color:#c5d5e7;
+
+  line-height:1.9;
+  font-size:1.1rem;
+}
+
+.section-title{
+  margin-top:70px;
+  margin-bottom:24px;
+
+  font-size:2rem;
+
+  color:#dff7ff;
+
+  letter-spacing:0.04em;
+}
+
+/* cards */
+
+.cards{
+  margin-top:70px;
+
+  display:grid;
+
+  grid-template-columns:
+    repeat(auto-fit, minmax(260px, 1fr));
+
+  gap:28px;
+}
+
+.card{
+  position:relative;
+
+  overflow:hidden;
+
+  padding:32px;
+
+  border-radius:30px;
+
+  text-decoration:none;
+  color:white;
+
+  background:
+    rgba(255,255,255,0.06);
+
+  border:
+    1px solid rgba(255,255,255,0.1);
+
+  backdrop-filter:blur(18px);
+
+  transition:
+    transform 0.3s,
+    border-color 0.3s,
+    background 0.3s;
+}
+
+.card:hover{
+  transform:translateY(-6px);
+
+  border-color:
+    rgba(0,255,255,0.35);
+
+  background:
+    rgba(255,255,255,0.09);
+}
+
+.card::before{
+  content:"";
+
+  position:absolute;
+  inset:0;
+
+  opacity:0;
+  transition:opacity 0.3s;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,255,255,0.15),
+      rgba(0,120,255,0.15)
+    );
+}
+
+.card:hover::before{
+  opacity:1;
+}
+
+.card-content{
+  position:relative;
+  z-index:1;
+}
+
+.version{
+  color:#7ddfff;
+
+  letter-spacing:0.2em;
+  font-size:0.85rem;
+}
+
+.card h2{
+  margin-top:10px;
+
+  font-size:2rem;
+}
+
+.card p{
+  margin-top:20px;
+
+  color:#d2ddeb;
+
+  line-height:1.8;
+}
+
+.open{
+  margin-top:28px;
+
+  display:inline-block;
+
+  color:#8cefff;
+  font-weight:bold;
+
+  transition:transform 0.3s;
+}
+
+.card:hover .open{
+  transform:translateX(4px);
+}
+
+/* timeline */
+
+.timeline{
+  margin-top:90px;
+
+  padding:40px;
+
+  border-radius:36px;
+
+  background:
+    rgba(255,255,255,0.05);
+
+  border:
+    1px solid rgba(255,255,255,0.1);
+
+  backdrop-filter:blur(18px);
+}
+
+.timeline h3{
+  font-size:2rem;
+}
+
+.timeline-list{
+  margin-top:40px;
+
+  display:flex;
+  flex-direction:column;
+  gap:30px;
+}
+
+.timeline-item{
+  display:flex;
+  gap:20px;
+}
+
+.dot{
+  width:18px;
+  height:18px;
+
+  flex-shrink:0;
+
+  border-radius:50%;
+
+  background:
+    linear-gradient(
+      135deg,
+      #00ffff,
+      #0077ff
+    );
+
+  margin-top:6px;
+
+  box-shadow:
+    0 0 15px rgba(0,255,255,0.6);
+}
+
+.timeline-item h4{
+  font-size:1.2rem;
+}
+
+.timeline-item p{
+  margin-top:8px;
+
+  color:#cad7e7;
+  line-height:1.8;
+}
+
+/* footer */
+
+footer{
+  margin-top:70px;
+
+  padding-top:24px;
+
+  border-top:
+    1px solid rgba(255,255,255,0.1);
+
+  color:#9db1c9;
+
+  display:flex;
+  justify-content:space-between;
+  gap:20px;
+
+  flex-wrap:wrap;
+}
+
+/* mobile */
+
+@media(max-width:700px){
+
+  .container{
+    padding:50px 0;
+  }
+
+  .card{
+    padding:26px;
+  }
+
+  .timeline{
+    padding:28px;
+  }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="glow glow1"></div>
+<div class="glow glow2"></div>
+
+<div class="container">
+
+  <div class="badge">
+    Chemistry Simulation Portal
+  </div>
+
+  <h1>
+    化学<br>
+    シミュレーション
+  </h1>
+
+  <p class="description">
+  気液平衡・気体状態方程式・熱運動など、
+  化学現象を可視化するインタラクティブシミュレーション集。
+  実験的なモデルから発展版まで比較しながら閲覧できます。
+  </p>
+
+  <h2 class="section-title">
+    Vapor-Liquid Equilibrium
+  </h2>
+    
+  <section class="cards">
+
+    <a class="card" href="../v1/">
+      <div class="card-content">
+        <div class="version">VER1</div>
+        <h2>Prototype</h2>
+
+        <p>
+          最初期の気液平衡モデル。
+          蒸発と凝縮の基本的な挙動を実装。
+        </p>
+
+        <div class="open">
+          Open Simulator →
+        </div>
+      </div>
+    </a>
+
+    <a class="card" href="../v2/">
+      <div class="card-content">
+        <div class="version">VER2</div>
+        <h2>Sophisticated</h2>
+
+        <p>
+          デザイン・数値表示を改良。
+        </p>
+
+        <div class="open">
+          Open Simulator →
+        </div>
+      </div>
+    </a>
+
+    <a class="card" href="../v3/">
+      <div class="card-content">
+        <div class="version">VER3</div>
+        <h2>T-dependent</h2>
+
+        <p>
+          温度依存性を追加。
+        </p>
+
+        <div class="open">
+          Open Simulator →
+        </div>
+      </div>
+    </a>
+
+    <a class="card" href="../v4/">
+      <div class="card-content">
+        <div class="version">VER4.0</div>
+        <h2>Current</h2>
+
+        <p>
+          最新版。
+          実際の値と結びつくように計算値を改良。
+        </p>
+
+        <div class="open">
+          Open Simulator →
+        </div>
+      </div>
+    </a>
+
+    <a class="card" href="../v4_1/">
+      <div class="card-content">
+        <div class="version">VER4.1</div>
+        <h2>Experimental</h2>
+
+        <p>
+          実験版。
+          蒸発量の温度変化をアレニウスの式を参考に変更。
+        </p>
+
+        <div class="open">
+          Open Simulator →
+        </div>
+      </div>
+    </a>
+
+  </section>
+
+  <h2 class="section-title">
+    Ideal Gas / Thermodynamics
+  </h2>
+
+  <section class="cards">
+
+    <a class="card" href="https://taiyo0720.github.io/gasEquation/">
+      <div class="card-content">
+
+        <div class="version">
+          PV = nRT
+        </div>
+
+        <h2>Ideal Gas</h2>
+
+        <p>
+          圧力・体積・温度・モル数の関係を
+          可視化する理想気体状態方程式シミュレータ。
+        </p>
+
+        <div class="open">
+          Open Simulator →
+        </div>
+
+      </div>
+    </a>
+
+  </section>
+
+  <section class="timeline">
+
+    <h3>Vapor-Liquid Equilibrium Development History</h3>
+
+    <div class="timeline-list">
+
+      <div class="timeline-item">
+        <div class="dot"></div>
+
+        <div>
+          <h4>ver1 - Prototype</h4>
+
+          <p>
+            気液平衡シミュレーションの原型。
+          </p>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="dot"></div>
+
+        <div>
+          <h4>ver2 - Sophisticated</h4>
+
+          <p>
+            デザインを改良。
+          </p>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="dot"></div>
+
+        <div>
+          <h4>ver3 - T-dependent</h4>
+
+          <p>
+            温度依存性を追加。
+          </p>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="dot"></div>
+
+        <div>
+          <h4>ver4.0 - Current</h4>
+
+          <p>
+            蒸気圧近似を追加。
+          </p>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="dot"></div>
+
+        <div>
+          <h4>ver4.1 - Experimental</h4>
+
+          <p>
+            蒸発量計算にアレニウスの式の指数部分を導入。
+          </p>
+        </div>
+      </div>
+
+
+    </div>
+
+  </section>
+
+  <footer>
+
+    <div>
+      気液平衡シミュレーション ポータル
+    </div>
+
+    <div>
+      Experimental Physics / Chemistry Visualization
+    </div>
+
+  </footer>
+
+</div>
+
+</body>
+</html>
+
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
